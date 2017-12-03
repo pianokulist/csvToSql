@@ -2,11 +2,19 @@
 #include <QString>
 #include <QDebug>
 
+#define CONSTRUCTORS {
+
 CustomTableModel::CustomTableModel(QObject * parent, QStringList& column_names, QStringList& types)
     : QAbstractTableModel(parent)
 {
     InitCustomTableModel(parent, column_names, types);
 }
+
+#define CONSTRUCTORS_END }
+
+
+
+#define DESTRUCTORS {
 
 CustomTableModel::CustomTableModel(QObject * parent, QStringList& column_names)
 {
@@ -17,6 +25,12 @@ CustomTableModel::CustomTableModel(QObject * parent, QStringList& column_names)
     }
     InitCustomTableModel(parent, column_names, *types);
 }
+
+#define DESTRUCTORS_END }
+
+
+
+#define METHODS {
 
 int CustomTableModel::InitCustomTableModel(QObject * parent, QStringList& column_names, QStringList& types)
 {
@@ -342,3 +356,5 @@ bool CustomTableModel::IsEmpty()
 {
     return m_data.empty();
 }
+
+#define METHODS_END }

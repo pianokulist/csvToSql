@@ -1,11 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QTextStream>
 #include <QFile>
 #include <QFileDialog>
-#include <QDebug>
-#include <QStandardItemModel>
 #include <QMessageBox>
+#include <QStandardItemModel>
+#include <QTextStream>
 
 
 #define CONSTRUCTORS {
@@ -17,11 +16,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // создаем combo box и добавляем его в toolBar
     comboBox = new QComboBox();
     connect(comboBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(DataBaseUpdate(QString)));
     comboBox->setEnabled(false);
     ui->mainToolBar->addWidget(comboBox);
 
+    // создаем label и добавляем его в statusBar
     textLabel = new QLabel();
     ui->statusBar->addWidget(textLabel);
     textLabel->setText("Hello!");
@@ -67,6 +68,7 @@ void MainWindow::on_actionExit_triggered()
 // Открывает CSV файл
 void MainWindow::on_actionOpen_CSV_triggered()
 {
+    // получаем имя файла из диалога
     QString name = QFileDialog::getOpenFileName(this,
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("CSV (*.csv)")));
@@ -77,9 +79,12 @@ void MainWindow::on_actionOpen_CSV_triggered()
         // выходим
         return;
     }
+    // обновляем интерфейс
     UpdateUI(false);
+    // открываем CSV файл
     openCSVFile(name);
 
+    // выводим информацию в statusBar
     textLabel->setText(
         tr("%1: Data succesfuly loaded").
                 arg(QTime::currentTime().toString()));
@@ -98,7 +103,7 @@ void MainWindow::openCSVFile(const QString& fileName)
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    // считываем имя колонок и типы колонок
+    // считываем имя колонок
     QString column_names = file.readLine();
     column_names.remove( QRegExp("\r") );
     column_names.remove( QRegExp("\n") );
@@ -138,7 +143,8 @@ void MainWindow::openCSVFile(const QString& fileName)
     ui->tableView->setModel(_customModel);
 }
 
-// Проверяет строку, удаляет лишние символы, заменяет спец символы, добавляет обработанные данные в табличную модель
+// Проверяет строку, удаляет лишние символы,
+// заменяет спец символы, добавляет обработанные данные в табличную модель
 void MainWindow::checkString(QString &temp, QChar character)
 {
     if(temp.count("\"")%2 == 0) {
@@ -175,9 +181,12 @@ void MainWindow::on_actionOpen_SQLite_Table_triggered()
         // выходим
         return;
     }
+    // обновляем интерфейс
     UpdateUI(true);
+    // открываем SQL базу данных
     openSql(name);
 
+    // выводим информацию в statusBar
     textLabel->setText(
         tr("%1: Data succesfuly loaded").
                 arg(QTime::currentTime().toString()));
@@ -186,14 +195,20 @@ void MainWindow::on_actionOpen_SQLite_Table_triggered()
 // Открывает SQLite базу данных
 void MainWindow::openSql(const QString& fileName)
 {
+    // открываем базу данных
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(fileName);
     db.open();
 
+    // создаем табличную модель для отображения
     _sqlTableModel = new QSqlTableModel(this);
+    // всегда открываем первую таблицу в списке
     _sqlTableModel->setTable(db.tables()[0]);
     _sqlTableModel->select();
+
+    // добавляем список таблиц в comboBox
     comboBox->addItems(db.tables());
+
     ui->tableView->setModel(_sqlTableModel);
 }
 
@@ -336,28 +351,34 @@ bool MainWindow::saveCSVFile(const QString& fileName)
 // Сохраняет в SQLite
 void MainWindow::on_actionSave_To_SQLite_triggered()
 {
+    // открываем диалог
     saveSqlDialog = new SaveToSqlDialog(this);
     int result = saveSqlDialog->exec();
 
     QString tableName;
     QSqlDatabase temp;
+    // если нажали OK
     if (result == QDialog::Accepted)
     {
+        // получаем базу данных, в которую будем сохранять и имя таблицы
         tableName = saveSqlDialog->GetDataToSave(temp);
+        // получаем текущую модель
         QAbstractTableModel* currentModel = qobject_cast<QAbstractTableModel*>(ui->tableView->model());
+        // создаем таблицу, и заполняем заголовок
         fillFromHeader(*currentModel, temp, tableName);
+        // заполняем данные
         fillFromData(*currentModel, temp, tableName);
 
+        // пишем в статус баре об успешном сохранении
+        textLabel->setText(
+                    tr("%1: Data saved in data base: %2").
+                    arg(QTime::currentTime().toString()).
+                    arg(temp.databaseName()));
     }
-
-    // пишем в статус баре об успешном сохранении
-    textLabel->setText(
-                tr("%1: Data saved by path: %2").
-                arg(QTime::currentTime().toString()).
-                arg(fileName));
 }
 
 // создает таблицу и записывает заголовки
+// если таблица существует, она будет перезаписана
 void MainWindow::fillFromHeader(
         const QAbstractTableModel& model,
         QSqlDatabase& dataBaseToSave,
@@ -370,15 +391,17 @@ void MainWindow::fillFromHeader(
     {
         str += model.headerData(i, Qt::Horizontal).toString() + " ";
 
-        if (model.rowCount()) // если в модели есть данные, а не только заголовок. таблица - просто шапка без строк
+        // если в модели есть данные, а не только заголовок. таблица - просто шапка без строк
+        if (model.rowCount())
         {
             QString tmp = whatTypeOfAttribute(model.data(model.index(0, i)).toString()); // тип поля
             str += tmp;
             columnTypes.append(tmp);
         }
+        // если модель пуста, то в базе все поля будут TEXT
         else
         {
-            str += "TEXT";      // если модель пуста, то в базе все поля будут TEXT
+            str += "TEXT";
             columnTypes.append("TEXT");
         }
 
