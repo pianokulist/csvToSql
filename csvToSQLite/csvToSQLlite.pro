@@ -4,9 +4,10 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 
 TARGET = csvToSQLlite
 TEMPLATE = app
@@ -26,11 +27,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    customtablemodel.cpp
+    customtablemodel.cpp \
+    savetosqldialog.cpp
 
 HEADERS += \
         mainwindow.h \
-    customtablemodel.h
+    customtablemodel.h \
+    savetosqldialog.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    savetosqldialog.ui

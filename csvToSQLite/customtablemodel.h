@@ -25,15 +25,16 @@ public:
     // устанавливаем количество столбцов. Поскольку они не меняются - указываем константу
     virtual int columnCount(const QModelIndex &rcParent = QModelIndex()) const;
     // функция для передачи данных пользователю
-    virtual QVariant data(const QModelIndex &index, int role) const;
+    virtual QVariant data(const QModelIndex &index, int role = Qt::UserRole) const;
     // Функция для приёма данных от пользователя
-    virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
+    virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::UserRole);
     // Описание заголовков таблицы
-    virtual QVariant headerData(int nSection, Qt::Orientation nOrientation, int nRole) const;
+    virtual QVariant headerData(int nSection, Qt::Orientation nOrientation, int nRole  = Qt::UserRole) const;
     // Определение возможностей ячейки таблицы (отображение, редактируемость...)
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
-    // Возвращаем строку, соответствующую указанному столбцу
-   // QString getRow(const QModelIndex &index);
+
+    void clear();
+    bool IsEmpty();
     bool insertRows(int nRow, int nCount, const QModelIndex &rcParent = QModelIndex());
     bool removeRows(int row, int count, const QModelIndex &parent_index = QModelIndex());
     bool moveRows(const QModelIndex &rcParentSource, int nRowSource, int nCount,
@@ -46,7 +47,6 @@ public:
     QList<QStringList>* getData();
     QStringList* getColNames();
     QList<QPair<QString,int>>* getColTypes();
-    const QStringList &getItemNames() const;
 
     // определяет тип колонки
     void DetermineColumnsTypes();
@@ -55,7 +55,6 @@ protected:
 
     QList<QPair<QString,int>> m_types;
     QList<QStringList> m_data; //< Список для хранения записей
-    QStringList m_Items;
 
 private:
     int InitCustomTableModel(QObject * parent, QStringList& column_names, QStringList& types);

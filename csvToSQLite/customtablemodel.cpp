@@ -41,6 +41,7 @@ int CustomTableModel::InitCustomTableModel(QObject * parent, QStringList& column
 
 CustomTableModel::~CustomTableModel()
 {
+    clear();
 }
 
 bool CustomTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -228,10 +229,6 @@ QList<QPair<QString,int>>* CustomTableModel::getColTypes()
     return &m_types;
 }
 
-const QStringList &CustomTableModel::getItemNames() const
-{
-    return m_Items;
-}
 
 void CustomTableModel::DetermineColumnsTypes()
 {
@@ -296,7 +293,6 @@ bool CustomTableModel::CheckIntType(int indexColumn)
     return true;
 }
 
-
 bool CustomTableModel::CheckRealType(int indexColumn)
 {
     // для всех колонок
@@ -315,7 +311,6 @@ bool CustomTableModel::CheckRealType(int indexColumn)
 
     return true;
 }
-
 
 bool CustomTableModel::CheckLogicType(int indexColumn)
 {
@@ -337,5 +332,13 @@ bool CustomTableModel::CheckLogicType(int indexColumn)
     return true;
 }
 
+void CustomTableModel::clear()
+{
+    m_data.clear();
+    m_types.clear();
+}
 
-
+bool CustomTableModel::IsEmpty()
+{
+    return m_data.empty();
+}

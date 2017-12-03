@@ -42,8 +42,8 @@
     <property name="title">
      <string>Convert</string>
     </property>
-    <addaction name="actionCSV_To_SQLite"/>
-    <addaction name="actionSQLite_To_CSV"/>
+    <addaction name="actionSave_To_SQLite"/>
+    <addaction name="actionSave_To_CSV"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConvert"/>
@@ -72,14 +72,20 @@
     <string>Exit</string>
    </property>
   </action>
-  <action name="actionCSV_To_SQLite">
+  <action name="actionSave_To_SQLite">
    <property name="text">
-    <string>CSV To SQLite</string>
+    <string>Save To SQLite</string>
+   </property>
+   <property name="toolTip">
+    <string>Save To SQLite</string>
    </property>
   </action>
-  <action name="actionSQLite_To_CSV">
+  <action name="actionSave_To_CSV">
    <property name="text">
-    <string>SQLite To CSV</string>
+    <string>SaveToCSV</string>
+   </property>
+   <property name="toolTip">
+    <string>Save To CSV</string>
    </property>
   </action>
  </widget>
