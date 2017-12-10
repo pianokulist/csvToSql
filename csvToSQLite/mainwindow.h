@@ -51,6 +51,7 @@ public:
     //! A method, that saves to CSV file.
     /*!
         \param fileName A CSV file, in which data should be saved.
+        \return true - if file saved successfully, otherwise - false.
     */
     bool saveCSVFile(const QString& fileName);
 

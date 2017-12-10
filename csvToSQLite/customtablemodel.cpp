@@ -4,35 +4,27 @@
 
 #define CONSTRUCTORS {
 
+// Инициализирует новый экземпляр класса CustomTableModel
 CustomTableModel::CustomTableModel(QObject * parent, QStringList& column_names, QStringList& types)
     : QAbstractTableModel(parent)
 {
-    InitCustomTableModel(parent, column_names, types);
+    InitCustomTableModel(column_names, types);
 }
 
-#define CONSTRUCTORS_END }
-
-
-
-#define DESTRUCTORS {
-
+// Инициализирует новый экземпляр класса CustomTableModel
 CustomTableModel::CustomTableModel(QObject * parent, QStringList& column_names)
+    : QAbstractTableModel(parent)
 {
     QStringList* types = new QStringList();
     for(int i = 0; i < column_names.size(); ++i)
     {
         types->append("string");
     }
-    InitCustomTableModel(parent, column_names, *types);
+    InitCustomTableModel(column_names, *types);
 }
 
-#define DESTRUCTORS_END }
-
-
-
-#define METHODS {
-
-int CustomTableModel::InitCustomTableModel(QObject * parent, QStringList& column_names, QStringList& types)
+// Инициализирует поля класса CustomTableModel
+void CustomTableModel::InitCustomTableModel(QStringList& column_names, QStringList& types)
 {
     m_column_names = column_names;
 
@@ -52,14 +44,29 @@ int CustomTableModel::InitCustomTableModel(QObject * parent, QStringList& column
     }
     m_types = t_types;
 }
+#define CONSTRUCTORS_END }
 
+
+
+#define DESTRUCTORS {
+
+// Очищает текущий экземпляр класса CustomTableModel
 CustomTableModel::~CustomTableModel()
 {
     clear();
 }
 
+#define DESTRUCTORS_END }
+
+
+
+#define METHODS {
+
+// записывает новые данные введенные пользователем
 bool CustomTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    // если индекс корректный
+    // и роль - изменяемый, или отображаемы, или CheckState
     if (index.isValid() && (role == Qt::EditRole || role == Qt::DisplayRole || role== Qt::CheckStateRole ))
     {
         QStringList &record = m_data[index.row()];
@@ -80,28 +87,38 @@ bool CustomTableModel::setData(const QModelIndex &index, const QVariant &value, 
         default:
             return false;
         }
+
+        // испускаем сигнал, что данные изменены.
         emit(dataChanged(index, index));
+        // возвращаем значение, что данные изменены успешно
         return true;
     }
+    // возвращаем значение, что данные не изменены
     return false;
 }
 
+// возвращает количество строк в таблице
 int CustomTableModel::rowCount(const QModelIndex &rcParent) const
 {
     return m_data.size();
 }
 
+// возвращает количество колонок в таблице
 int CustomTableModel::columnCount(const QModelIndex &rcParent) const
 {
     return m_column_names.size();
 }
 
+// выводит данные на экран таблицы
 QVariant CustomTableModel::data(const QModelIndex &index, int role) const
 {
+    // если индекс корректный
     if (index.isValid())
         if (index.row() < rowCount() && index.column() < columnCount())
         {
+            // получаем запись ячейки таблицы
             const QString &record = m_data[index.row()][index.column()];
+            // если роль - отображаемый, или изменяемый
             if (role == Qt::DisplayRole || role == Qt::EditRole)
             {
                 // определяем соответствие между столбцами и полями структуры
@@ -117,6 +134,7 @@ QVariant CustomTableModel::data(const QModelIndex &index, int role) const
                 }
                 return record;
             }
+            // если роль CheckState и тип логический
             else if (role == Qt::CheckStateRole && m_types[index.column()].second == HEADER_LOGIC)
             {
                 return QVariant(record).toBool() ? Qt::Checked : Qt::Unchecked;
@@ -126,6 +144,7 @@ QVariant CustomTableModel::data(const QModelIndex &index, int role) const
     return QString();
 }
 
+// отображает заголовки колонок
 QVariant CustomTableModel::headerData(int nSection,
                                   Qt::Orientation nOrientation,
                                   int nRole) const
@@ -137,6 +156,7 @@ QVariant CustomTableModel::headerData(int nSection,
     return QVariant();//QAbstractTableModel::headerData(nSection, nOrientation, nRole);
 }
 
+// вставляет строку в таблицу
 bool CustomTableModel::insertRows(int nRow, int nCount, const QModelIndex &rcParent)
 {
     if (nRow < 0)
@@ -170,6 +190,7 @@ bool CustomTableModel::insertRows(int nRow, int nCount, const QModelIndex &rcPar
     return true;
 }
 
+// удаляет строку
 bool CustomTableModel::removeRows(int row, int count, const QModelIndex &parent_index)
 {
 
@@ -182,6 +203,7 @@ bool CustomTableModel::removeRows(int row, int count, const QModelIndex &parent_
     return true;
 }
 
+// устанавливает флаги для соответсвующей ячейки
 Qt::ItemFlags CustomTableModel::flags(const QModelIndex &rcIndex) const
 {
     Qt::ItemFlags result = QAbstractTableModel::flags(rcIndex);
@@ -200,6 +222,7 @@ Qt::ItemFlags CustomTableModel::flags(const QModelIndex &rcIndex) const
     return result;
 }
 
+// добавляет строку в таблицу
 bool CustomTableModel::appendRow(QStringList data)
 {
     if (data.size() != m_column_names.size())
@@ -208,6 +231,7 @@ bool CustomTableModel::appendRow(QStringList data)
     return true;
 }
 
+// позволяет перетаскивать строки
 bool CustomTableModel::moveRows(
         const QModelIndex &rcParentSource, int nRowSource, int nCount,
         const QModelIndex &rcParentDest, int nChildDest)
@@ -223,27 +247,31 @@ bool CustomTableModel::moveRows(
     return true;
 }
 
+// возвращает флаг, о поддержке функции перетаскивания
 Qt::DropActions CustomTableModel::supportedDropActions() const
 {
     return Qt::CopyAction | Qt::MoveAction;
 }
 
+// возвращает данные таблицы
 QList<QStringList>* CustomTableModel::getData()
 {
     return &m_data;
 }
 
+// возвращает имена колонок
 QStringList* CustomTableModel::getColNames()
 {
     return &m_column_names;
 }
 
+// возвращает типы колонок
 QList<QPair<QString,int>>* CustomTableModel::getColTypes()
 {
     return &m_types;
 }
 
-
+// определяет типы колонок по их содержимому
 void CustomTableModel::DetermineColumnsTypes()
 {
     // если список данных пуст
@@ -288,6 +316,7 @@ void CustomTableModel::DetermineColumnsTypes()
 
 }
 
+// проверяет, является ли колонка типа INT
 bool CustomTableModel::CheckIntType(int indexColumn)
 {
     // для всех колонок
@@ -307,6 +336,7 @@ bool CustomTableModel::CheckIntType(int indexColumn)
     return true;
 }
 
+// проверяет, является ли колонка типа REAL
 bool CustomTableModel::CheckRealType(int indexColumn)
 {
     // для всех колонок
@@ -326,6 +356,7 @@ bool CustomTableModel::CheckRealType(int indexColumn)
     return true;
 }
 
+// проверяет, является ли колонка логического типа
 bool CustomTableModel::CheckLogicType(int indexColumn)
 {
     // для всех колонок
@@ -346,12 +377,14 @@ bool CustomTableModel::CheckLogicType(int indexColumn)
     return true;
 }
 
+// очищает таблицу
 void CustomTableModel::clear()
 {
     m_data.clear();
     m_types.clear();
 }
 
+// возвращает значение, показывающее, что таблица пуста
 bool CustomTableModel::IsEmpty()
 {
     return m_data.empty();

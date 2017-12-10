@@ -6,6 +6,7 @@
 
 #define CONSTRUCTORS {
 
+// Инициализирует новый экземпляр класса SaveToSqlDialog
 SaveToSqlDialog::SaveToSqlDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SaveToSqlDialog)
@@ -19,6 +20,7 @@ SaveToSqlDialog::SaveToSqlDialog(QWidget *parent) :
 
 #define DESTRUCTORS {
 
+// Очищает текущий экземпляр класса SaveToSqlDialog
 SaveToSqlDialog::~SaveToSqlDialog()
 {
     delete ui;

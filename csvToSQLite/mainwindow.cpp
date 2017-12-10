@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    this->setWindowIcon(QIcon(QString::fromLatin1(":/resources/icon.png")));
     ui->setupUi(this);
 
     // создаем combo box и добавляем его в toolBar
