@@ -46,7 +46,7 @@ public:
     /*!
         \param fileName A CSV file, which should be opened.
     */
-    void openCSVFile(const QString& fileName);
+    bool openCSVFile(const QString& fileName);
 
     //! A method, that saves to CSV file.
     /*!
@@ -59,7 +59,7 @@ public:
     /*!
         \param fileName A SQL data base file, which should be opened.
     */
-    void openSql(const QString& fileName);
+    bool openSql(const QString& fileName);
 
     //! A method, that saves data to the SQL data base.
     /*!
@@ -100,6 +100,14 @@ private slots:
     //! The triggered event handler of action "Save To SQLite".
     void on_actionSave_To_SQLite_triggered();
 
+    void on_actionRemove_Row_triggered();
+
+    void on_actionMove_To_First_triggered();
+
+    void on_actionAppend_Row_triggered();
+
+    void on_actionCommit_Changes_triggered();
+
 private:
     //! A user interface.
     Ui::MainWindow *ui;
@@ -122,6 +130,8 @@ private:
     SaveToSqlDialog *saveSqlDialog;
     //! A column types of SQL data base table.
     QStringList columnTypes;
+    //! A symbol which divide the columns in CSV file.
+    const char CSV_DIVIDER = ';';
 };
 
 #endif // MAINWINDOW_H

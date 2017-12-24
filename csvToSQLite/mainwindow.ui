@@ -45,8 +45,18 @@
     <addaction name="actionSave_To_SQLite"/>
     <addaction name="actionSave_To_CSV"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionRemove_Row"/>
+    <addaction name="actionAppend_Row"/>
+    <addaction name="actionMove_To_First"/>
+    <addaction name="actionCommit_Changes"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuConvert"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -86,6 +96,26 @@
    </property>
    <property name="toolTip">
     <string>Save To CSV</string>
+   </property>
+  </action>
+  <action name="actionRemove_Row">
+   <property name="text">
+    <string>Remove Row</string>
+   </property>
+  </action>
+  <action name="actionAppend_Row">
+   <property name="text">
+    <string>Append Row</string>
+   </property>
+  </action>
+  <action name="actionMove_To_First">
+   <property name="text">
+    <string>Move To First</string>
+   </property>
+  </action>
+  <action name="actionCommit_Changes">
+   <property name="text">
+    <string>Commit Changes</string>
    </property>
   </action>
  </widget>

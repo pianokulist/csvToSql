@@ -56,6 +56,9 @@ void MainWindow::UpdateUI(bool openType)
         _sqlTableModel->clear();
     if (_customModel != nullptr)
         _customModel->clear();
+
+    ui->actionMove_To_First->setEnabled(!openType);
+    ui->actionCommit_Changes->setEnabled(openType);
 }
 
 // Выход из приложения
@@ -74,32 +77,41 @@ void MainWindow::on_actionOpen_CSV_triggered()
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("CSV (*.csv)")));
 
-    // если нет имени файла
-    if (name.isEmpty())
-    {
-        // выходим
-        return;
-    }
     // обновляем интерфейс
     UpdateUI(false);
     // открываем CSV файл
-    openCSVFile(name);
-
-    // выводим информацию в statusBar
-    textLabel->setText(
-        tr("%1: Data succesfuly loaded").
+    if (openCSVFile(name))
+    {
+        // выводим информацию в statusBar
+        textLabel->setText(
+            tr("%1: Data succesfuly loaded").
                 arg(QTime::currentTime().toString()));
+    }
+    else
+    {
+        // выводим информацию в statusBar
+        textLabel->setText(
+            tr("%1: Data was not loaded").
+                arg(QTime::currentTime().toString()));
+    }
+
 }
 
 // Открывает CSV файл
-void MainWindow::openCSVFile(const QString& fileName)
+bool MainWindow::openCSVFile(const QString& fileName)
 {
     QFile file{fileName};
+    // если нет имени файла
+    if (fileName.isEmpty())
+    {
+        // выходим
+        return false;
+    }
     // если не смогли открыть файл
     if (!file.open(QIODevice::ReadOnly))
     {
         // выходим
-        return;
+        return false;
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -124,7 +136,7 @@ void MainWindow::openCSVFile(const QString& fileName)
     while (!textStream.atEnd()) {
         // получаем символ
         textStream >> character;
-        if (character == ';') {
+        if (character == CSV_DIVIDER) {
             checkString(temp, character);
         } else if (character == '\n') {
             checkString(temp, character);
@@ -142,6 +154,8 @@ void MainWindow::openCSVFile(const QString& fileName)
     _customModel->DetermineColumnsTypes();
     // устанавливаем модель в просмотрщик таблиц
     ui->tableView->setModel(_customModel);
+
+    return true;
 }
 
 // Проверяет строку, удаляет лишние символы,
@@ -159,7 +173,7 @@ void MainWindow::checkString(QString &temp, QChar character)
         temp.replace("\"\"", "\"");
 
         standardItemList.append(temp);
-        if (character != QChar(';')) {
+        if (character != QChar(CSV_DIVIDER)) {
             _customModel->appendRow(standardItemList);
             standardItemList.clear();
         }
@@ -176,30 +190,40 @@ void MainWindow::on_actionOpen_SQLite_Table_triggered()
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("SQLite files(*.sqlite *.db)")));
 
-    // если нет имени файла
-    if (name.isEmpty())
-    {
-        // выходим
-        return;
-    }
     // обновляем интерфейс
     UpdateUI(true);
     // открываем SQL базу данных
-    openSql(name);
-
-    // выводим информацию в statusBar
-    textLabel->setText(
-        tr("%1: Data succesfuly loaded").
+    if(openSql(name))
+    {
+        // выводим информацию в statusBar
+        textLabel->setText(
+            tr("%1: Data succesfuly loaded").
                 arg(QTime::currentTime().toString()));
+    }
+    else
+    {
+        // выводим информацию в statusBar
+        textLabel->setText(
+            tr("%1: Data was not loaded").
+                arg(QTime::currentTime().toString()));
+    }
 }
 
 // Открывает SQLite базу данных
-void MainWindow::openSql(const QString& fileName)
+bool MainWindow::openSql(const QString& fileName)
 {
+    // если нет имени файла
+    if (fileName.isEmpty())
+    {
+        // выходим
+        return false;
+    }
+
     // открываем базу данных
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(fileName);
-    db.open();
+    if(!db.open())
+        return false;
 
     // создаем табличную модель для отображения
     _sqlTableModel = new QSqlTableModel(this);
@@ -211,11 +235,16 @@ void MainWindow::openSql(const QString& fileName)
     comboBox->addItems(db.tables());
 
     ui->tableView->setModel(_sqlTableModel);
+
+    return true;
 }
 
 // Открывает таблицу выбранную в комбобоксе
 void MainWindow::DataBaseUpdate(QString tableName)
 {
+    if(tableName.isEmpty() || tableName == "")
+        return;
+
     _sqlTableModel->setTable(tableName);
     _sqlTableModel->select();
 }
@@ -233,13 +262,6 @@ void MainWindow::on_actionSave_To_CSV_triggered()
                 this,
                 tr("Save CSV File"),
                 QString(), QString::fromLatin1("CSV (*.csv)"));
-
-    // если не выбрали
-    if (fileName.isEmpty())
-    {
-        // ниче не делаем
-        return;
-    }
 
     // если успешно сохранили
     if (saveCSVFile(fileName))
@@ -263,6 +285,13 @@ void MainWindow::on_actionSave_To_CSV_triggered()
 // Сохраняет в CSV файл
 bool MainWindow::saveCSVFile(const QString& fileName)
 {
+    // если не выбрали
+    if (fileName.isEmpty())
+    {
+        // ниче не делаем
+        return false;
+    }
+
     QList<QStringList>* data;
     QStringList* column_names;
 
@@ -320,7 +349,7 @@ bool MainWindow::saveCSVFile(const QString& fileName)
     QTextStream stream{&file};
 
     // записываем имена колонок
-    data_string = column_names->join(";");
+    data_string = column_names->join(CSV_DIVIDER);
     data_string += ("\r\n");
     stream << data_string;
     data_string.clear();
@@ -330,9 +359,14 @@ bool MainWindow::saveCSVFile(const QString& fileName)
     {
         for(int j = 0; j <data->at(i).size(); ++j)
         {
-
-            data_string += data->at(i)[j];
-            data_string += (";");
+            QString temp = data->at(i)[j];
+            if (temp.contains(';'))
+            {
+                data_string += "\"";
+                temp += "\"";
+            }
+            data_string += temp;
+            data_string += (CSV_DIVIDER);
 
         }
         data_string.remove(data_string.size()-1,1);
@@ -375,6 +409,16 @@ void MainWindow::on_actionSave_To_SQLite_triggered()
                     tr("%1: Data saved in data base: %2").
                     arg(QTime::currentTime().toString()).
                     arg(temp.databaseName()));
+
+        temp.close();
+    }
+    else
+    {
+        // пишем в статус баре
+        textLabel->setText(
+                    tr("%1: Data was not saved.").
+                    arg(QTime::currentTime().toString()));
+
     }
 }
 
@@ -473,5 +517,62 @@ QString MainWindow::whatTypeOfAttribute(const QString& str) const
 }
 
 #define SAVE_END }
+
+
+#define EDIT {
+
+// удаляет строку из модели
+void MainWindow::on_actionRemove_Row_triggered()
+{
+    QModelIndex indexes = ui->tableView->currentIndex();
+    QAbstractItemModel* abstractModel = ui->tableView->model();
+    abstractModel->removeRows(indexes.row(), 1, indexes);
+    if (_sqlTableModel != nullptr)
+    {
+        if (_sqlTableModel->rowCount()>0)
+        {
+            on_actionCommit_Changes_triggered();
+            ui->tableView->setRowHidden(indexes.row(), true);
+        }
+    }
+}
+
+// добавляет строку в модель
+void MainWindow::on_actionAppend_Row_triggered()
+{
+    QAbstractItemModel* abstractModel = ui->tableView->model();
+    abstractModel->insertRow(abstractModel->rowCount());
+    if (_sqlTableModel != nullptr)
+        if (_sqlTableModel->rowCount()>0)
+            on_actionCommit_Changes_triggered();
+}
+
+// передвигает строку в начало
+void MainWindow::on_actionMove_To_First_triggered()
+{
+    QModelIndex indexesSource = ui->tableView->currentIndex();
+    QModelIndex indexesDestination;
+    ui->tableView->model()->moveRows(indexesSource, indexesSource.row(), 1,
+                                     indexesDestination, 0);
+}
+
+// только для sqltablemodel
+// подтверждает изменения
+void MainWindow::on_actionCommit_Changes_triggered()
+{
+    if (_sqlTableModel != nullptr)
+    {
+        if (_sqlTableModel->rowCount()>0)
+        {
+            if( _sqlTableModel->submitAll() ) {
+                _sqlTableModel->database().commit();
+            } else {
+                _sqlTableModel->database().rollback();
+            }
+        }
+    }
+}
+
+#define END_EDIT }
 
 #define METHODS_END }

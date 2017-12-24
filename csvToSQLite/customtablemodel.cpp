@@ -206,9 +206,11 @@ bool CustomTableModel::removeRows(int row, int count, const QModelIndex &parent_
 // устанавливает флаги для соответсвующей ячейки
 Qt::ItemFlags CustomTableModel::flags(const QModelIndex &rcIndex) const
 {
-    Qt::ItemFlags result = QAbstractTableModel::flags(rcIndex);
+
     if (!rcIndex.isValid())
         return Qt::ItemIsEnabled;
+
+    Qt::ItemFlags result = QAbstractTableModel::flags(rcIndex);
 
     result |= Qt::ItemIsDragEnabled;
     if (m_types[rcIndex.column()].second == HEADER_LOGIC)
@@ -381,6 +383,7 @@ bool CustomTableModel::CheckLogicType(int indexColumn)
 void CustomTableModel::clear()
 {
     m_data.clear();
+    m_column_names.clear();
     m_types.clear();
 }
 

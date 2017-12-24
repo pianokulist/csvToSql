@@ -38,7 +38,7 @@ SaveToSqlDialog::~SaveToSqlDialog()
 void SaveToSqlDialog::on_pushButton_clicked()
 {
     QString dbName = QFileDialog::getSaveFileName(this,
-                                         tr("Open file"),
+                                         tr("Save file"),
                                          QString(), QString(QString::fromLatin1("SQLite files(*.sqlite *.db)")));
 
     // если выбрали файл
