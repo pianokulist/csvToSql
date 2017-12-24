@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 #include <QTextStream>
+#include <QDebug>
 
 
 #define CONSTRUCTORS {
@@ -27,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
     textLabel = new QLabel();
     ui->statusBar->addWidget(textLabel);
     textLabel->setText("Hello!");
+
+    ui->menuEdit->setEnabled(false);
 }
 
 #define CONSTRUCTORS_END }
@@ -47,16 +50,32 @@ MainWindow::~MainWindow()
 
 #define METHODS {
 
+// очищает модели
+void MainWindow::clearModels()
+{
+    comboBox->clear();
+    if (_sqlTableModel != nullptr)
+    {
+        if (db.isOpen())    // если в прошлый Open открывалась база
+        {
+            _sqlTableModel->clear();
+            _sqlTableModel = nullptr;
+            db.close();
+        }
+    }
+    if (_customModel != nullptr)
+    {
+        _customModel->clear();
+        _customModel = nullptr;
+    }
+}
+
 // Обновляет интерфейс
 void MainWindow::UpdateUI(bool openType)
 {
     comboBox->setEnabled(openType);
-    comboBox->clear();
-    if (_sqlTableModel != nullptr)
-        _sqlTableModel->clear();
-    if (_customModel != nullptr)
-        _customModel->clear();
 
+    ui->menuEdit->setEnabled(true);
     ui->actionMove_To_First->setEnabled(!openType);
     ui->actionCommit_Changes->setEnabled(openType);
 }
@@ -77,11 +96,12 @@ void MainWindow::on_actionOpen_CSV_triggered()
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("CSV (*.csv)")));
 
-    // обновляем интерфейс
-    UpdateUI(false);
+    clearModels();
     // открываем CSV файл
     if (openCSVFile(name))
     {
+        // обновляем интерфейс
+        UpdateUI(false);
         // выводим информацию в statusBar
         textLabel->setText(
             tr("%1: Data succesfuly loaded").
@@ -190,11 +210,12 @@ void MainWindow::on_actionOpen_SQLite_Table_triggered()
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("SQLite files(*.sqlite *.db)")));
 
-    // обновляем интерфейс
-    UpdateUI(true);
+    clearModels();
     // открываем SQL базу данных
     if(openSql(name))
     {
+        // обновляем интерфейс
+        UpdateUI(true);
         // выводим информацию в statusBar
         textLabel->setText(
             tr("%1: Data succesfuly loaded").
@@ -418,7 +439,7 @@ void MainWindow::on_actionSave_To_SQLite_triggered()
         textLabel->setText(
                     tr("%1: Data was not saved.").
                     arg(QTime::currentTime().toString()));
-
+        temp.close();
     }
 }
 
@@ -434,7 +455,12 @@ void MainWindow::fillFromHeader(
 
     for (int i = 0; i < model.columnCount(); i++)
     {
-        str += model.headerData(i, Qt::Horizontal).toString() + " ";
+        QString columnName = model.headerData(i, Qt::Horizontal).toString();
+        if (columnName.contains(' '))
+        {
+            columnName = '[' + columnName + ']';
+        }
+        str += columnName + " ";
 
         // если в модели есть данные, а не только заголовок. таблица - просто шапка без строк
         if (model.rowCount())
@@ -456,6 +482,8 @@ void MainWindow::fillFromHeader(
 
     str += ");";
     query.exec(str);
+
+    dataBaseToSave.commit();
 }
 
 // записывает данные в таблицу
@@ -475,7 +503,12 @@ void MainWindow::fillFromData(
 
         for (int j = 0; j < model.columnCount(); ++j)
         {
-            str += model.headerData(j, Qt::Horizontal).toString();
+            QString columnName = model.headerData(j, Qt::Horizontal).toString();
+            if (columnName.contains(' '))
+            {
+                columnName = '[' + columnName + ']';
+            }
+            str += columnName;
 
             if (j != model.columnCount() - 1)
                 str += ", ";
@@ -495,7 +528,8 @@ void MainWindow::fillFromData(
         }
 
         str += ");";
-        query.exec(str);
+        bool b = query.exec(str);
+        qDebug() << b << "\n";
     }
 
     dataBaseToSave.commit();

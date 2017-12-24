@@ -132,6 +132,7 @@ private:
     QStringList columnTypes;
     //! A symbol which divide the columns in CSV file.
     const char CSV_DIVIDER = ';';
+    void clearModels();
 };
 
 #endif // MAINWINDOW_H

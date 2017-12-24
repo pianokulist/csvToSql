@@ -2,6 +2,7 @@
 #include "ui_savetosqldialog.h"
 #include <QFileDialog>
 #include <QSqlQuery>
+#include <QDebug>
 
 
 #define CONSTRUCTORS {
@@ -67,7 +68,8 @@ QString SaveToSqlDialog::GetDataToSave(QSqlDatabase& dataBase)
     {
         // удаляем существующую таблицу
         QSqlQuery query(db);
-        query.exec("DROP TABLE " + tableName + ";");
+        bool b = query.exec("DROP TABLE " + tableName + ";");
+        qDebug() << b << "\n";
     }
 
     // возвращаем имя таблицы
