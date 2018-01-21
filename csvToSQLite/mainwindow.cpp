@@ -96,7 +96,6 @@ void MainWindow::on_actionOpen_CSV_triggered()
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("CSV (*.csv)")));
 
-    clearModels();
     // открываем CSV файл
     if (openCSVFile(name))
     {
@@ -133,6 +132,8 @@ bool MainWindow::openCSVFile(const QString& fileName)
         // выходим
         return false;
     }
+
+     clearModels();
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
@@ -210,7 +211,6 @@ void MainWindow::on_actionOpen_SQLite_Table_triggered()
                 tr("Open file"),
                 QString(), QString(QString::fromLatin1("SQLite files(*.sqlite *.db)")));
 
-    clearModels();
     // открываем SQL базу данных
     if(openSql(name))
     {
@@ -239,7 +239,7 @@ bool MainWindow::openSql(const QString& fileName)
         // выходим
         return false;
     }
-
+    clearModels();
     // открываем базу данных
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(fileName);
@@ -381,7 +381,11 @@ bool MainWindow::saveCSVFile(const QString& fileName)
         for(int j = 0; j <data->at(i).size(); ++j)
         {
             QString temp = data->at(i)[j];
-            if (temp.contains(';'))
+            if (temp.contains('\"'))
+            {
+                temp.replace('\"', "\"\"");
+            }
+            if (temp.contains(CSV_DIVIDER))
             {
                 data_string += "\"";
                 temp += "\"";
@@ -608,5 +612,16 @@ void MainWindow::on_actionCommit_Changes_triggered()
 }
 
 #define END_EDIT }
+
+
+#define TEST_FUNC{
+
+QList<QStringList>* MainWindow::GETDATA()
+{
+    return _customModel->getData();
+}
+
+#define END_TEST_FUNC }
+
 
 #define METHODS_END }

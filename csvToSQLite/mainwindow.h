@@ -84,6 +84,9 @@ public:
     */
     QString whatTypeOfAttribute(const QString& str) const;
 
+//TEST_FUNC
+    QList<QStringList>* GETDATA();
+
 private slots:
     //! The triggered event handler of action "Exit".
     void on_actionExit_triggered();
